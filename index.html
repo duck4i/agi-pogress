@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AGI Progress Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        #info {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+        }
+        .stages {
+            position: absolute;
+            left: 50%;
+            top: 30%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #0ff;
+            font-family: 'Courier New', monospace;
+        }
+        .stage {
+            margin: 10px 0;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+        .stage.active {
+            opacity: 1;
+            text-shadow: 0 0 10px #0ff;
+        }
+        .progress-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+        }
+        .progress-circle {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .progress-dots {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px dotted #0ff;
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+        .progress-fill {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: transparent;
+            transition: background 0.3s;
+            mask: radial-gradient(circle at center, 
+                   transparent 0% 35%, 
+                   black 35% 100%);
+            -webkit-mask: radial-gradient(circle at center, 
+                         transparent 0% 35%, 
+                         black 35% 100%);
+        }
+        .progress-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #0ff;
+            font-size: 2em;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            padding: 10px;
+            text-shadow: none;
+            mix-blend-mode: screen;
+        }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .about {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            color: rgb(255, 0, 212);
+            font-size: 1em;
+            text-shadow: 0 0 10px rgb(238, 24, 253);
+            z-index: 1000000;
+        }
+        .about span {
+            text-decoration: underline;
+            cursor: crosshair;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function onDuck() {
+            window.open("https://x.com/duck4i", "_blank");
+        }
+        function onRhys(){
+            window.open("https://x.com/RhysSullivan", "_blank");
+        }
+    </script>
+    <div id="info">
+        <div class="stages">
+            <div class="stage" id="stage1">Basic ML Systems</div>
+            <div class="stage" id="stage2">Advanced Neural Networks</div>
+            <div class="stage" id="stage3">Multi-Modal Intelligence</div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-circle">
+                <div class="progress-dots"></div>
+                <div class="progress-fill" id="progress-fill"></div>
+                <div class="progress-text">
+                    <span id="percentage">0</span>%
+                </div>
+            </div>
+        </div>
+        <div class="about">
+            <div>by <span onclick="onDuck()">@Duck4i</span></div>
+            <div>inspiration <span onclick="onRhys()">@RhysSullivan</span></div>
+        </div>
+    </div>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        varying vec2 vUv;
+        uniform float uTime;
+
+        float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        }
+
+        void main() {
+            vUv = uv;
+            vec3 pos = position;
+            
+            float glitchStrength = 0.2;
+            float timeScale = uTime * 2.0;
+            
+            if(random(vec2(floor(uv.y * 50.0), floor(timeScale))) > 0.95) {
+                pos.x += (random(vec2(uv.y, timeScale)) * 2.0 - 1.0) * glitchStrength;
+            }
+            
+            if(random(vec2(floor(uv.x * 50.0), floor(timeScale * 1.1))) > 0.95) {
+                pos.y += (random(vec2(uv.x, timeScale)) * 2.0 - 1.0) * glitchStrength;
+            }
+
+            float wave = sin(pos.x * 2.0 + timeScale) * sin(pos.y * 2.0 + timeScale) * 0.1;
+            pos.z += wave;
+
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        uniform float uTime;
+        varying vec2 vUv;
+
+        float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        }
+
+        void main() {
+            vec2 grid = fract(vUv * 30.0);
+            float lineWidth = 0.03;
+            
+            float lines = max(
+                smoothstep(lineWidth, 0.0, grid.x),
+                smoothstep(lineWidth, 0.0, grid.y)
+            );
+            
+            float glitchTime = floor(uTime * 2.0);
+            if(random(vec2(floor(vUv.y * 50.0), glitchTime)) > 0.97) {
+                lines *= 0.5;
+            }
+            
+            vec3 color = vec3(0.0, 1.0, 1.0) * lines;
+            
+            float fade = 1.0 - pow(distance(vUv, vec2(0.5)) * 1.0, 2.0);
+            color *= fade;
+            
+            gl_FragColor = vec4(color, 0.5);
+        }
+    </script>
+    <script>
+        let scene, camera, renderer, backgroundMesh, shapes = [];
+        const params = { progress: 0, targetProgress: 75 };
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000);
+            document.body.appendChild(renderer.domElement);
+
+            const geometry = new THREE.PlaneGeometry(50, 50, 100, 100);
+            const material = new THREE.ShaderMaterial({
+                vertexShader: document.getElementById('vertexShader').textContent,
+                fragmentShader: document.getElementById('fragmentShader').textContent,
+                uniforms: {
+                    uTime: { value: 0 }
+                },
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+
+            backgroundMesh = new THREE.Mesh(geometry, material);
+            backgroundMesh.position.z = -10;
+            scene.add(backgroundMesh);
+
+            createShapes();
+
+            camera.position.z = 20;
+            camera.lookAt(0, 0, 0);
+
+            window.addEventListener('resize', onWindowResize, false);
+            updateProgress();
+        }
+
+        function createShapes() {
+            const shapeConfigs = [
+                { type: 'cube', size: 1.5, count: 4 },
+                { type: 'pyramid', size: 1.2, count: 3 },
+                { type: 'sphere', size: 1, count: 3, segments: 32 }
+            ];
+
+            shapeConfigs.forEach(config => {
+                for (let i = 0; i < config.count; i++) {
+                    let geometry;
+                    switch (config.type) {
+                        case 'cube':
+                            geometry = new THREE.BoxGeometry(config.size, config.size, config.size);
+                            break;
+                        case 'pyramid':
+                            geometry = new THREE.TetrahedronGeometry(config.size);
+                            break;
+                        case 'sphere':
+                            geometry = new THREE.SphereGeometry(config.size, config.segments, config.segments);
+                            break;
+                    }
+
+                    const material = new THREE.MeshBasicMaterial({
+                        color: 0x00ffff,
+                        wireframe: true,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+
+                    const mesh = new THREE.Mesh(geometry, material);
+
+                    mesh.position.x = (Math.random() - 0.5) * 20;
+                    mesh.position.y = (Math.random() - 0.5) * 20;
+                    mesh.position.z = (Math.random() - 0.5) * 5;
+
+                    shapes.push({
+                        mesh: mesh,
+                        rotationSpeed: 0.005 + Math.random() * 0.01,
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.05,
+                            (Math.random() - 0.5) * 0.05,
+                            (Math.random() - 0.5) * 0.02
+                        )
+                    });
+
+                    scene.add(mesh);
+                }
+            });
+        }
+
+        function updateShapes() {
+            shapes.forEach(shape => {
+                shape.mesh.rotation.x += shape.rotationSpeed;
+                shape.mesh.rotation.y += shape.rotationSpeed;
+
+                shape.mesh.position.add(shape.velocity);
+
+                ['x', 'y'].forEach(axis => {
+                    if (Math.abs(shape.mesh.position[axis]) > 12) {
+                        shape.velocity[axis] *= -1;
+                    }
+                });
+
+                if (Math.abs(shape.mesh.position.z) > 3) {
+                    shape.velocity.z *= -1;
+                }
+            });
+        }
+
+        function updateProgress() {
+            if (params.progress < params.targetProgress) {
+                params.progress += 1;
+                const progressElement = document.getElementById('progress-fill');
+                progressElement.style.background = `conic-gradient(#0ff ${params.progress}%, transparent ${params.progress}%)`;
+                document.getElementById('percentage').textContent = Math.round(params.progress);
+
+                // Update stages
+                const stage1 = document.getElementById('stage1');
+                const stage2 = document.getElementById('stage2');
+                const stage3 = document.getElementById('stage3');
+                
+                stage1.classList.remove('active');
+                stage2.classList.remove('active');
+                stage3.classList.remove('active');
+
+                if (params.progress < 30) {
+                    stage1.classList.add('active');
+                } else if (params.progress < 60) {
+                    stage2.classList.add('active');
+                } else {
+                    stage3.classList.add('active');
+                }
+
+                setTimeout(updateProgress, 50);
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function render(time) {
+            time *= 0.001;
+
+            if (backgroundMesh) {
+                backgroundMesh.material.uniforms.uTime.value = time;
+            }
+
+            updateShapes();
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
+        }
+
+        init();
+        render();
+    </script>
+</body>
+</html>
