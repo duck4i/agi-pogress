@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>AGI Progress Visualization</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -9,6 +10,7 @@
             overflow: hidden;
             background: #000;
         }
+
         #info {
             position: absolute;
             width: 100%;
@@ -16,6 +18,7 @@
             pointer-events: none;
             font-family: 'Courier New', monospace;
         }
+
         .stages {
             position: absolute;
             left: 50%;
@@ -25,15 +28,18 @@
             color: #0ff;
             font-family: 'Courier New', monospace;
         }
+
         .stage {
             margin: 10px 0;
             opacity: 0.3;
             transition: opacity 0.3s;
         }
+
         .stage.active {
             opacity: 1;
             text-shadow: 0 0 10px #0ff;
         }
+
         .progress-container {
             position: absolute;
             left: 50%;
@@ -42,11 +48,13 @@
             width: 200px;
             height: 200px;
         }
+
         .progress-circle {
             position: relative;
             width: 100%;
             height: 100%;
         }
+
         .progress-dots {
             position: absolute;
             width: 100%;
@@ -55,6 +63,7 @@
             border-radius: 50%;
             animation: rotate 10s linear infinite;
         }
+
         .progress-fill {
             position: absolute;
             width: 100%;
@@ -62,13 +71,14 @@
             border-radius: 50%;
             background: transparent;
             transition: background 0.3s;
-            mask: radial-gradient(circle at center, 
-                   transparent 0% 35%, 
-                   black 35% 100%);
-            -webkit-mask: radial-gradient(circle at center, 
-                         transparent 0% 35%, 
-                         black 35% 100%);
+            mask: radial-gradient(circle at center,
+                    transparent 0% 35%,
+                    black 35% 100%);
+            -webkit-mask: radial-gradient(circle at center,
+                    transparent 0% 35%,
+                    black 35% 100%);
         }
+
         .progress-text {
             position: absolute;
             left: 50%;
@@ -82,10 +92,17 @@
             text-shadow: none;
             mix-blend-mode: screen;
         }
+
         @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
+
         .about {
             position: absolute;
             right: 20px;
@@ -95,6 +112,7 @@
             text-shadow: 0 0 10px rgb(238, 24, 253);
             z-index: 1000000;
         }
+
         .about span {
             text-decoration: underline;
             cursor: crosshair;
@@ -102,16 +120,50 @@
         }
     </style>
 </head>
+
 <body>
     <script>
         function onDuck() {
             window.open("https://x.com/duck4i", "_blank");
         }
-        function onRhys(){
+        function onRhys() {
             window.open("https://x.com/RhysSullivan", "_blank");
         }
     </script>
+    <script>
+
+        async function getJobCount() {
+            try {
+                const response = await fetch('https://openai-job-counter.duck4i.workers.dev/job-count');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data && data.jobCount) {
+                    return data.jobCount
+                }
+                throw new Error('Unexpected response format')
+
+            } catch (error) {
+                console.error('Failed to fetch job count:', error);
+                return null;
+            }
+        }
+
+        getJobCount().then(jobCount => {
+            if (jobCount !== null) {
+                console.log('Number of jobs:', jobCount);
+                document.getElementById('openai').textContent = `OpenAI has ${jobCount} job openings`;
+            } else {
+                console.log('Could not retrieve job count');
+            }
+        });
+
+    </script>
     <div id="info">
+        <div class="#openai">
+
+        </div>
         <div class="stages">
             <div class="stage" id="stage1">Basic ML Systems</div>
             <div class="stage" id="stage2">Advanced Neural Networks</div>
@@ -307,7 +359,7 @@
                 const stage1 = document.getElementById('stage1');
                 const stage2 = document.getElementById('stage2');
                 const stage3 = document.getElementById('stage3');
-                
+
                 stage1.classList.remove('active');
                 stage2.classList.remove('active');
                 stage3.classList.remove('active');
@@ -347,4 +399,5 @@
         render();
     </script>
 </body>
+
 </html>
