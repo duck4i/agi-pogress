@@ -337,7 +337,7 @@
 
         function updateProgress() {
             if (params.progress < params.targetProgress) {
-                params.progress += 1;
+                params.progress += 0.75;
                 const progressElement = document.getElementById('progress-fill');
                 progressElement.style.background = `conic-gradient(#0ff ${params.progress}%, transparent ${params.progress}%)`;
                 document.getElementById('percentage').textContent = Math.round(params.progress);
